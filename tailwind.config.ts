@@ -8,11 +8,12 @@ export default {
     container: {
       center: true,
       padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
+      screens: { "2xl": "1400px" },
     },
     extend: {
+      fontFamily: {
+        sans: ["'Plus Jakarta Sans'", "system-ui", "sans-serif"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -57,6 +58,14 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        bubble: {
+          sender: "hsl(var(--bubble-sender))",
+          "sender-foreground": "hsl(var(--bubble-sender-foreground))",
+          receiver: "hsl(var(--bubble-receiver))",
+          "receiver-foreground": "hsl(var(--bubble-receiver-foreground))",
+        },
+        online: "hsl(var(--online))",
+        typing: "hsl(var(--typing))",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -65,25 +74,39 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+        "bubble-in": {
+          "0%": { opacity: "0", transform: "translateY(10px) scale(0.95)" },
+          "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
+        "fade-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        "slide-in-left": {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(0)" },
+        },
+        "typing-dot": {
+          "0%, 60%, 100%": { opacity: "0.3", transform: "scale(0.8)" },
+          "30%": { opacity: "1", transform: "scale(1)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "bubble-in": "bubble-in 0.3s ease-out",
+        "fade-in": "fade-in 0.2s ease-out",
+        "slide-in-left": "slide-in-left 0.3s ease-out",
+        "typing-dot-1": "typing-dot 1.4s infinite 0s",
+        "typing-dot-2": "typing-dot 1.4s infinite 0.2s",
+        "typing-dot-3": "typing-dot 1.4s infinite 0.4s",
       },
     },
   },
