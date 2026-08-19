@@ -1,73 +1,120 @@
-# Welcome to your Lovable project
+# Aura Chat
 
-## Project info
+Project name
+LetsChat
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+Purpose
+Build a modern web chat platform. Focus on fast messaging, clean UI, and responsive design for mobile, tablet, and desktop.
 
-## How can I edit this code?
+Design style
+Minimal. Soft glassmorphism with subtle shadows. Smooth transitions. Clean typography.
 
-There are several ways of editing your application.
+Color system
+Support two themes.
 
-**Use Lovable**
+Light theme
+• Background: soft white or light gray
+• Chat bubbles: light blue for sender, light gray for receiver
+• Text: dark gray or black
+• Accent color: modern blue
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+Dark theme
+• Background: deep charcoal or near-black.
+• Chat bubbles: dark blue for sender, dark gray for receiver
+• Text: white or light gray
+• Accent color: soft neon blue
 
-Changes made via Lovable will be committed automatically to this repo.
+Theme behavior
+• Provide a theme toggle in the top navigation bar
+• Icon changes between sun and moon
+• The theme switches instantly without a page reload
+• Save the user preference in local storage
+• Detect system theme on first visit
 
-**Use your preferred IDE**
+Main layout
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Navigation bar
+• App logo “LetChat.”
+• Search icon
+• Theme toggle
+• User profile avatar
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Left sidebar
+• List of conversations
+• User avatars
+• Last message preview
+• Unread message badge
+• Search bar for contacts
 
-Follow these steps:
+Main chat area
+• Chat header with contact name and status
+• Scrollable message area
+• Message bubbles with timestamps
+• Typing indicator
+• Emoji picker
+• Message input field with send button
+
+Right sidebar
+• Contact profile details
+• Media shared in the chat
+• Mute and block options
+
+Key features
+• Real-time messaging interface
+• Online and offline status
+• Typing indicator
+• Message reactions
+• Image and file sharing
+• Emoji support
+• Message read receipts
+• Responsive layout
+
+Animations
+• Smooth bubble entrance animation
+• Hover effects on chat list items
+• Smooth theme transition between light and dark
+
+Typography
+• Clean modern font
+• Clear message spacing
+• Large readable text on mobile
+
+Mobile behavior
+• Sidebar collapses into a slide menu
+• Chat occupies full screen
+• Floating new message button
+
+Accessibility
+• High-contrast text
+• Keyboard navigation support
+• Clear focus states
+
+Extra UI details
+• Rounded chat bubbles
+• Soft shadows
+• Glass effect for panels
+• Smooth scrolling in chat window
+
+Output requirement
+Generate a modern, responsive UI for LetChat with complete light and dark theme support.
+
+This project was built with [Lovable](https://lovable.dev).
+
+## Build with Lovable
+
+Continue developing this project in the [Lovable editor](https://lovable.dev/projects/9eacfeef-3f0c-421e-8d0b-333366e0368d).
+
+- **Ship faster**: describe what you want to build and Lovable handles the code.
+- **Stay in sync**: every change made in Lovable is committed straight to this repository.
+- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+
+## Development
+
+Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
+git clone <this-repository-url>
+cd <repository-name>
 npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
