@@ -6,9 +6,10 @@ import { useState, useRef, useEffect } from "react";
 
 interface NavBarProps {
   onMenuToggle: () => void;
+  onNewConversation: () => void;
 }
 
-export function NavBar({ onMenuToggle }: NavBarProps) {
+export function NavBar({ onMenuToggle, onNewConversation }: NavBarProps) {
   const { theme, toggle } = useTheme();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -45,7 +46,7 @@ export function NavBar({ onMenuToggle }: NavBarProps) {
       </div>
 
       <div className="flex items-center gap-1">
-        <button className="p-2.5 rounded-xl hover:bg-muted transition-colors" aria-label="Search">
+        <button onClick={onNewConversation} className="p-2.5 rounded-xl hover:bg-muted transition-colors" aria-label="Search">
           <Search className="w-4.5 h-4.5 text-muted-foreground" />
         </button>
         <button onClick={toggle} className="p-2.5 rounded-xl hover:bg-muted transition-colors" aria-label="Toggle theme">

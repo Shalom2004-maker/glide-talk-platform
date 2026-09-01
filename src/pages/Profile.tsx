@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, LogOut } from "lucide-react";
+import { useUploadAvatar } from "@/hooks/useChat";
+import { ArrowLeft, Save, LogOut, Camera, Loader2 } from "lucide-react";
 
 const Profile = () => {
   const { user, signOut } = useAuth();
@@ -13,12 +14,15 @@ const Profile = () => {
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadAvatar = useUploadAvatar();
 
   useEffect(() => {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("display_name, bio, status_message")
+      .select("display_name, bio, status_message, avatar_url")
       .eq("user_id", user.id)
       .single()
       .then(({ data }) => {
@@ -26,9 +30,24 @@ const Profile = () => {
           setDisplayName(data.display_name || "");
           setBio(data.bio || "");
           setStatusMessage(data.status_message || "");
+          setAvatarUrl(data.avatar_url);
         }
       });
   }, [user]);
+
+  const handleAvatar = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    uploadAvatar.mutate(file, {
+      onSuccess: (data) => {
+        setAvatarUrl(data.url);
+        toast({ title: "Avatar updated!" });
+      },
+      onError: () => {
+        toast({ title: "Error", description: "Could not upload avatar.", variant: "destructive" });
+      },
+    });
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,10 +92,41 @@ const Profile = () => {
       <div className="max-w-md mx-auto px-4 py-8 space-y-6">
         {/* Avatar */}
         <div className="flex flex-col items-center gap-3">
-          <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-2xl font-bold">
-            {initials}
-          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleAvatar}
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="relative group rounded-full"
+            aria-label="Change avatar"
+            disabled={uploadAvatar.isPending}
+          >
+            {uploadAvatar.isPending ? (
+              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+              </div>
+            ) : avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt="avatar"
+                className="w-20 h-20 rounded-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-2xl font-bold">
+                {initials}
+              </div>
+            )}
+            <span className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <Camera className="w-6 h-6 text-white" />
+            </span>
+          </button>
           <p className="text-sm text-muted-foreground">{user?.email}</p>
+          <p className="text-xs text-muted-foreground">Click avatar to upload a photo</p>
         </div>
 
         {/* Form */}

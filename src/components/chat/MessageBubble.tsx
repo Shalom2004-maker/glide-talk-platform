@@ -1,19 +1,26 @@
 import { useState } from "react";
-import { Check, CheckCheck } from "lucide-react";
-import { Message } from "@/lib/mockData";
+import { Check, CheckCheck, FileText, Download } from "lucide-react";
+import { MessageWithReactions } from "@/lib/chatService";
 
 interface MessageBubbleProps {
-  message: Message;
+  message: MessageWithReactions;
   isMe: boolean;
   showAvatar: boolean;
-  contactAvatar: string;
+  senderAvatar: string | null;
   onReact: (emoji: string) => void;
 }
 
 const quickReactions = ["❤️", "👍", "😂", "😮", "😢"];
 
-export function MessageBubble({ message, isMe, showAvatar, contactAvatar, onReact }: MessageBubbleProps) {
+function formatTime(timestamp: string) {
+  return new Date(timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+export function MessageBubble({ message, isMe, showAvatar, senderAvatar, onReact }: MessageBubbleProps) {
   const [showReactions, setShowReactions] = useState(false);
+
+  const dominantReaction = message.reactions?.[0]?.emoji;
+  const isImage = message.attachment_type?.startsWith("image/");
 
   return (
     <div
@@ -24,9 +31,13 @@ export function MessageBubble({ message, isMe, showAvatar, contactAvatar, onReac
       {/* Avatar */}
       <div className="w-7 flex-shrink-0">
         {showAvatar && !isMe && (
-          <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-[10px] font-semibold text-muted-foreground">
-            {contactAvatar}
-          </div>
+          senderAvatar ? (
+            <img src={senderAvatar} alt="" className="w-7 h-7 rounded-full object-cover" referrerPolicy="no-referrer" />
+          ) : (
+            <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-[10px] font-semibold text-muted-foreground">
+              ?
+            </div>
+          )
         )}
       </div>
 
@@ -38,11 +49,41 @@ export function MessageBubble({ message, isMe, showAvatar, contactAvatar, onReac
               : "bg-bubble-receiver text-bubble-receiver-foreground rounded-2xl rounded-bl-md"
           }`}
         >
-          {message.text}
+          {/* Image attachment */}
+          {message.attachment_url && isImage && (
+            <a href={message.attachment_url} target="_blank" rel="noreferrer" className="block mb-2 -mx-1">
+              <img
+                src={message.attachment_url}
+                alt={message.attachment_name || "Image"}
+                className="rounded-lg max-h-64 w-auto object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                referrerPolicy="no-referrer"
+              />
+            </a>
+          )}
+
+          {/* File attachment (non-image) */}
+          {message.attachment_url && !isImage && (
+            <a
+              href={message.attachment_url}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-2 mb-2 not-prose"
+            >
+              <FileText className="w-5 h-5 flex-shrink-0 opacity-70" />
+              <span className="text-xs truncate max-w-[180px]">{message.attachment_name || "File"}</span>
+              <Download className="w-4 h-4 flex-shrink-0 opacity-60" />
+            </a>
+          )}
+
+          {/* Text content */}
+          {message.content && message.content !== "📎 Attachment" && (
+            <>{message.content}</>
+          )}
+
           <div className={`flex items-center gap-1 mt-1 ${isMe ? "justify-end" : ""}`}>
-            <span className="text-[10px] opacity-50">{message.timestamp}</span>
+            <span className="text-[10px] opacity-50">{formatTime(message.created_at)}</span>
             {isMe && (
-              message.read
+              message.read_at
                 ? <CheckCheck className="w-3 h-3 text-primary opacity-70" />
                 : <Check className="w-3 h-3 opacity-40" />
             )}
@@ -50,12 +91,12 @@ export function MessageBubble({ message, isMe, showAvatar, contactAvatar, onReac
         </div>
 
         {/* Reaction badge */}
-        {message.reaction && (
+        {dominantReaction && (
           <button
-            onClick={() => onReact(message.reaction!)}
+            onClick={() => onReact(dominantReaction)}
             className={`absolute -bottom-2 ${isMe ? "left-1" : "right-1"} bg-card border border-border rounded-full px-1.5 py-0.5 text-xs shadow-sm hover:scale-110 transition-transform`}
           >
-            {message.reaction}
+            {dominantReaction}
           </button>
         )}
 
