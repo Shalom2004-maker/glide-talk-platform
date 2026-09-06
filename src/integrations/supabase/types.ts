@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversation_mutes: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_mutes_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_mutes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          }
+        ]
+      }
       conversation_participants: {
         Row: {
           conversation_id: string
@@ -166,9 +202,13 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string
+          deleted_at: string | null
           display_name: string | null
           id: string
+          is_admin: boolean
+          is_banned: boolean
           is_online: boolean
+          is_verified: boolean
           last_seen: string | null
           status_message: string | null
           updated_at: string
@@ -178,9 +218,13 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          deleted_at?: string | null
           display_name?: string | null
           id?: string
+          is_admin?: boolean
+          is_banned?: boolean
           is_online?: boolean
+          is_verified?: boolean
           last_seen?: string | null
           status_message?: string | null
           updated_at?: string
@@ -190,15 +234,55 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          deleted_at?: string | null
           display_name?: string | null
           id?: string
+          is_admin?: boolean
+          is_banned?: boolean
           is_online?: boolean
+          is_verified?: boolean
           last_seen?: string | null
           status_message?: string | null
           updated_at?: string
           user_id?: string
         }
         Relationships: []
+      }
+      user_blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_blocks_blocked_id_fkey"
+            columns: ["blocked_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_blocks_blocker_id_fkey"
+            columns: ["blocker_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          }
+        ]
       }
     }
     Views: {
@@ -210,6 +294,10 @@ export type Database = {
           other_user_id: string
         }
         Returns: string
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
       user_online: {
         Args: Record<PropertyKey, never>

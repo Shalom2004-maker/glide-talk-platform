@@ -1,5 +1,18 @@
-import { X, BellOff, Ban } from "lucide-react";
+import { X, BellOff, BellRing, Ban, ShieldOff } from "lucide-react";
 import { ConversationWithDetails } from "@/lib/chatService";
+import { useConversationMuted, useToggleMute, useBlockStatus, useToggleBlock } from "@/hooks/useChat";
+import { useToast } from "@/components/ui/use-toast";
+import { useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 
 interface ContactProfileProps {
   conversation: ConversationWithDetails;
@@ -22,8 +35,25 @@ function getInitials(name: string | null) {
 }
 
 export function ContactProfile({ conversation, currentUserId, onClose }: ContactProfileProps) {
+  const { toast } = useToast();
   const other = getOtherParticipant(conversation, currentUserId);
   const profile = other?.profile;
+  const otherUserId = other?.user_id || "";
+
+  const { data: muted = false } = useConversationMuted(conversation.id);
+  const toggleMute = useToggleMute(conversation.id);
+  const { data: blockStatus } = useBlockStatus(otherUserId);
+  const toggleBlock = useToggleBlock(otherUserId);
+  const [confirmUnblock, setConfirmUnblock] = useState(false);
+
+  const handleToggleBlock = (block: boolean) => {
+    if (block) {
+      toggleBlock.mutate(true);
+      toast({ title: "Contact blocked", description: `${profile?.display_name || "User"} will no longer be able to message you.` });
+    } else {
+      setConfirmUnblock(true);
+    }
+  };
 
   return (
     <div className="h-full flex flex-col glass-panel animate-fade-in">
@@ -66,16 +96,66 @@ export function ContactProfile({ conversation, currentUserId, onClose }: Contact
 
         {/* Actions */}
         <div className="space-y-2">
-          <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors text-sm text-foreground" disabled>
-            <BellOff className="w-4 h-4 text-muted-foreground" />
-            Mute notifications
+          <button
+            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors text-sm text-foreground"
+            onClick={() => toggleMute.mutate(!muted)}
+            disabled={toggleMute.isPending}
+          >
+            {muted ? <BellRing className="w-4 h-4 text-primary" /> : <BellOff className="w-4 h-4 text-muted-foreground" />}
+            {muted ? "Unmute notifications" : "Mute notifications"}
           </button>
-          <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-destructive/10 transition-colors text-sm text-destructive" disabled>
-            <Ban className="w-4 h-4" />
-            Block contact
-          </button>
+
+          {blockStatus?.blockedMe ? (
+            <button
+              className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-destructive/10 transition-colors text-sm text-destructive cursor-not-allowed"
+              disabled
+            >
+              <Ban className="w-4 h-4" />
+              You've been blocked by this contact
+            </button>
+          ) : blockStatus?.blockedByMe ? (
+            <button
+              className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-destructive/10 transition-colors text-sm text-destructive"
+              onClick={() => handleToggleBlock(false)}
+              disabled={toggleBlock.isPending}
+            >
+              <ShieldOff className="w-4 h-4" />
+              Unblock contact
+            </button>
+          ) : (
+            <button
+              className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-destructive/10 transition-colors text-sm text-destructive"
+              onClick={() => handleToggleBlock(true)}
+              disabled={toggleBlock.isPending}
+            >
+              <Ban className="w-4 h-4" />
+              Block contact
+            </button>
+          )}
         </div>
       </div>
+
+      <AlertDialog open={confirmUnblock} onOpenChange={setConfirmUnblock}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unblock contact?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You will be able to exchange messages with {profile?.display_name || "this contact"} again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                toggleBlock.mutate(false);
+                toast({ title: "Contact unblocked" });
+              }}
+            >
+              Unblock
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

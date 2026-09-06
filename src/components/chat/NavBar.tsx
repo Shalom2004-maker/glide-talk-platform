@@ -1,6 +1,7 @@
-import { Search, Sun, Moon, Menu, User, LogOut } from "lucide-react";
+import { Search, Sun, Moon, Menu, User, LogOut, Shield } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 import { useAuth } from "@/lib/auth";
+import { useIsAdmin } from "@/hooks/useChat";
 import { useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 
@@ -15,6 +16,7 @@ export function NavBar({ onMenuToggle, onNewConversation }: NavBarProps) {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { data: isAdmin } = useIsAdmin();
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -69,6 +71,14 @@ export function NavBar({ onMenuToggle, onNewConversation }: NavBarProps) {
               >
                 <User className="w-4 h-4" /> Profile
               </button>
+              {isAdmin && (
+                <button
+                  onClick={() => { setShowMenu(false); navigate("/admin"); }}
+                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
+                >
+                  <Shield className="w-4 h-4" /> Admin Dashboard
+                </button>
+              )}
               <button
                 onClick={async () => { setShowMenu(false); await signOut(); navigate("/login"); }}
                 className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-destructive hover:bg-muted transition-colors"

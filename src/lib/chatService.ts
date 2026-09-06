@@ -7,6 +7,19 @@ type MessageRow = Database["public"]["Tables"]["messages"]["Row"];
 type ReactionRow = Database["public"]["Tables"]["message_reactions"]["Row"];
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 
+interface JoinedParticipant extends ParticipantRow {
+  profiles: ProfileRow | null;
+}
+
+interface JoinedConversation extends ConversationRow {
+  conversation_participants: JoinedParticipant[];
+}
+
+interface JoinedMessage extends Omit<MessageRow, "sender"> {
+  message_reactions: ReactionRow[];
+  sender: ProfileRow | null;
+}
+
 export type { ProfileRow };
 
 export interface ConversationWithDetails extends ConversationRow {
@@ -33,52 +46,51 @@ export async function getUserConversations(userId: string): Promise<Conversation
 
   const { data: conversations, error: convError } = await supabase
     .from("conversations")
-    .select("*")
+    .select(`
+      *,
+      conversation_participants (
+        *,
+        profiles:user_id (*)
+      )
+    `)
     .in("id", convIds)
     .order("updated_at", { ascending: false });
 
   if (convError) throw convError;
 
-  const results: ConversationWithDetails[] = [];
+  const { data: lastMessages } = await supabase
+    .from("messages")
+    .select("*")
+    .in("conversation_id", convIds)
+    .order("created_at", { ascending: false });
 
-  for (const conv of conversations || []) {
-    const { data: parts } = await supabase
-      .from("conversation_participants")
-      .select("*")
-      .eq("conversation_id", conv.id);
-
-    const profiles: (ParticipantRow & { profile: ProfileRow })[] = [];
-    for (const p of parts || []) {
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", p.user_id)
-        .single();
-      if (prof) profiles.push({ ...p, profile: prof });
+  const lastMsgByConv = new Map<string, MessageRow>();
+  for (const msg of lastMessages || []) {
+    if (!lastMsgByConv.has(msg.conversation_id)) {
+      lastMsgByConv.set(msg.conversation_id, msg);
     }
+  }
 
-    const { data: lastMsg } = await supabase
-      .from("messages")
-      .select("*")
-      .eq("conversation_id", conv.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
-
-    const { count: unread } = await supabase
+  const unreadCounts = new Map<string, number>();
+  for (const convId of convIds) {
+    const { count } = await supabase
       .from("messages")
       .select("*", { count: "exact", head: true })
-      .eq("conversation_id", conv.id)
+      .eq("conversation_id", convId)
       .neq("sender_id", userId)
       .is("read_at", null);
-
-    results.push({
-      ...conv,
-      participants: profiles,
-      last_message: lastMsg,
-      unread_count: unread || 0,
-    });
+    unreadCounts.set(convId, count || 0);
   }
+
+  const results: ConversationWithDetails[] = (conversations || []).map((conv: JoinedConversation) => ({
+    ...conv,
+    participants: (conv.conversation_participants || []).map((p) => ({
+      ...p,
+      profile: p.profiles,
+    })),
+    last_message: lastMsgByConv.get(conv.id) || null,
+    unread_count: unreadCounts.get(conv.id) || 0,
+  }));
 
   return results;
 }
@@ -88,45 +100,32 @@ export async function getConversationMessages(
 ): Promise<MessageWithReactions[]> {
   const { data: messages, error } = await supabase
     .from("messages")
-    .select("*")
+    .select(`
+      *,
+      message_reactions (*),
+      sender:sender_id (*)
+    `)
     .eq("conversation_id", conversationId)
     .order("created_at", { ascending: true });
 
   if (error) throw error;
 
-  const results: MessageWithReactions[] = [];
-
-  for (const msg of messages || []) {
-    const { data: reactions } = await supabase
-      .from("message_reactions")
-      .select("*")
-      .eq("message_id", msg.id);
-
-    const { data: senderProfile } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", msg.sender_id)
-      .single();
-
-    results.push({
-      ...msg,
-      reactions: reactions || [],
-      sender_profile: senderProfile || {
-        id: "",
-        user_id: msg.sender_id,
-        display_name: "Unknown",
-        avatar_url: null,
-        bio: null,
-        status_message: null,
-        is_online: false,
-        last_seen: null,
-        created_at: "",
-        updated_at: "",
-      },
-    });
-  }
-
-  return results;
+  return (messages || []).map((msg: JoinedMessage) => ({
+    ...msg,
+    reactions: msg.message_reactions || [],
+    sender_profile: msg.sender || {
+      id: "",
+      user_id: msg.sender_id,
+      display_name: "Unknown",
+      avatar_url: null,
+      bio: null,
+      status_message: null,
+      is_online: false,
+      last_seen: null,
+      created_at: "",
+      updated_at: "",
+    },
+  }));
 }
 
 export type MessageInsert = {
@@ -288,4 +287,229 @@ export async function uploadAvatar(
   if (updateError) throw updateError;
 
   return { url: avatarUrl };
+}
+
+// ============================================================
+// ADMIN
+// ============================================================
+
+export async function getAdminStats(): Promise<{
+  totalUsers: number;
+  onlineUsers: number;
+  totalConversations: number;
+  totalMessages: number;
+  bannedUsers: number;
+  messagesToday: number;
+}> {
+  const [
+    { count: totalUsers },
+    { count: onlineUsers },
+    { count: totalConversations },
+    { count: totalMessages },
+    { count: bannedUsers },
+  ] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .is("deleted_at", null),
+    supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .eq("is_online", true)
+      .is("deleted_at", null),
+    supabase
+      .from("conversations")
+      .select("*", { count: "exact", head: true }),
+    supabase
+      .from("messages")
+      .select("*", { count: "exact", head: true }),
+    supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .eq("is_banned", true),
+  ]);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const { count: messagesToday } = await supabase
+    .from("messages")
+    .select("*", { count: "exact", head: true })
+    .gte("created_at", today.toISOString());
+
+  return {
+    totalUsers: totalUsers || 0,
+    onlineUsers: onlineUsers || 0,
+    totalConversations: totalConversations || 0,
+    totalMessages: totalMessages || 0,
+    bannedUsers: bannedUsers || 0,
+    messagesToday: messagesToday || 0,
+  };
+}
+
+export async function getAllUsers(
+  search: string = ""
+): Promise<ProfileRow[]> {
+  let query = supabase
+    .from("profiles")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (search.trim()) {
+    query = query.ilike("display_name", `%${search.trim()}%`);
+  }
+
+  const { data, error } = await query.limit(200);
+  if (error) throw error;
+  return data || [];
+}
+
+export async function setUserAdmin(userId: string, isAdmin: boolean): Promise<void> {
+  const { error } = await supabase
+    .from("profiles")
+    .update({ is_admin: isAdmin })
+    .eq("user_id", userId);
+  if (error) throw error;
+}
+
+export async function setUserBanned(userId: string, isBanned: boolean): Promise<void> {
+  const { error } = await supabase
+    .from("profiles")
+    .update({ is_banned: isBanned })
+    .eq("user_id", userId);
+  if (error) throw error;
+}
+
+export async function setUserVerified(userId: string, isVerified: boolean): Promise<void> {
+  const { error } = await supabase
+    .from("profiles")
+    .update({ is_verified: isVerified })
+    .eq("user_id", userId);
+  if (error) throw error;
+}
+
+export async function deleteUserProfile(userId: string): Promise<void> {
+  const { error } = await supabase
+    .from("profiles")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("user_id", userId);
+  if (error) throw error;
+}
+
+export async function deleteMessage(messageId: string): Promise<void> {
+  const { error } = await supabase
+    .from("messages")
+    .delete()
+    .eq("id", messageId);
+  if (error) throw error;
+}
+
+export async function getRecentMessages(limit = 50): Promise<MessageWithReactions[]> {
+  const { data, error } = await supabase
+    .from("messages")
+    .select(`
+      *,
+      sender:sender_id (*)
+    `)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+
+  return (data || []).map((msg: JoinedMessage) => ({
+    ...msg,
+    reactions: [],
+    sender_profile: msg.sender || {
+      id: "",
+      user_id: msg.sender_id,
+      display_name: "Unknown",
+      avatar_url: null,
+      bio: null,
+      status_message: null,
+      is_online: false,
+      last_seen: null,
+      created_at: "",
+      updated_at: "",
+    },
+  }));
+}
+
+// ============================================================
+// MUTE & BLOCK
+// ============================================================
+
+export async function isConversationMuted(
+  conversationId: string,
+  userId: string
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("conversation_mutes")
+    .select("id")
+    .eq("conversation_id", conversationId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  return !!data;
+}
+
+export async function setConversationMuted(
+  conversationId: string,
+  userId: string,
+  muted: boolean
+): Promise<void> {
+  if (muted) {
+    const { error } = await supabase
+      .from("conversation_mutes")
+      .upsert({ conversation_id: conversationId, user_id: userId });
+    if (error) throw error;
+  } else {
+    const { error } = await supabase
+      .from("conversation_mutes")
+      .delete()
+      .eq("conversation_id", conversationId)
+      .eq("user_id", userId);
+    if (error) throw error;
+  }
+}
+
+export async function getBlockStatus(
+  currentUserId: string,
+  otherUserId: string
+): Promise<{ blockedByMe: boolean; blockedMe: boolean }> {
+  const { data: mine } = await supabase
+    .from("user_blocks")
+    .select("id")
+    .eq("blocker_id", currentUserId)
+    .eq("blocked_id", otherUserId)
+    .maybeSingle();
+
+  const { data: theirs } = await supabase
+    .from("user_blocks")
+    .select("id")
+    .eq("blocker_id", otherUserId)
+    .eq("blocked_id", currentUserId)
+    .maybeSingle();
+
+  return {
+    blockedByMe: !!mine,
+    blockedMe: !!theirs,
+  };
+}
+
+export async function setUserBlocked(
+  currentUserId: string,
+  otherUserId: string,
+  blocked: boolean
+): Promise<void> {
+  if (blocked) {
+    const { error } = await supabase
+      .from("user_blocks")
+      .upsert({ blocker_id: currentUserId, blocked_id: otherUserId });
+    if (error) throw error;
+  } else {
+    const { error } = await supabase
+      .from("user_blocks")
+      .delete()
+      .eq("blocker_id", currentUserId)
+      .eq("blocked_id", otherUserId);
+    if (error) throw error;
+  }
 }

@@ -1,8 +1,10 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Send, Smile, Paperclip, Phone, Video, MoreVertical, X, Loader2 } from "lucide-react";
 import { ConversationWithDetails, MessageWithReactions } from "@/lib/chatService";
 import { useMessages, useSendMessage, useMarkAsRead, useAddReaction, useRemoveReaction, useUploadAttachment } from "@/hooks/useChat";
+import { useTypingIndicator } from "@/hooks/useTyping";
 import { MessageBubble } from "./MessageBubble";
+import { TypingIndicator } from "./TypingIndicator";
 
 interface ChatAreaProps {
   conversation: ConversationWithDetails;
@@ -63,10 +65,11 @@ export function ChatArea({ conversation, currentUserId, onToggleProfile }: ChatA
   const addReaction = useAddReaction();
   const removeReaction = useRemoveReaction();
   const uploadAttachment = useUploadAttachment();
+  const { otherTyping, broadcastTyping, broadcastStopTyping } = useTypingIndicator(conversation.id);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, pickedFile]);
+  }, [messages, pickedFile, otherTyping]);
 
   useEffect(() => {
     if (conversation.id) {
@@ -78,6 +81,8 @@ export function ChatArea({ conversation, currentUserId, onToggleProfile }: ChatA
   const handleSend = (content: string) => {
     const text = content.trim();
     if (!text && !pickedFile) return;
+
+    broadcastStopTyping(otherProfile?.display_name || null);
 
     if (pickedFile) {
       uploadAttachment.mutate(pickedFile, {
@@ -99,6 +104,16 @@ export function ChatArea({ conversation, currentUserId, onToggleProfile }: ChatA
       setShowEmoji(false);
     }
   };
+
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setInput(e.target.value);
+      if (e.target.value.trim()) {
+        broadcastTyping(otherProfile?.display_name || null);
+      }
+    },
+    [broadcastTyping, otherProfile?.display_name]
+  );
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -194,6 +209,11 @@ export function ChatArea({ conversation, currentUserId, onToggleProfile }: ChatA
       )}
 
       {/* Input */}
+      {otherTyping && (
+        <div className="px-4">
+          <TypingIndicator name={otherTyping.display_name} />
+        </div>
+      )}
       <div className="p-3 border-t border-border/50 flex-shrink-0">
         <input
           ref={fileInputRef}
@@ -223,7 +243,7 @@ export function ChatArea({ conversation, currentUserId, onToggleProfile }: ChatA
           </button>
           <input
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleInputChange}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend(input)}
             placeholder="Type a message..."
             className="flex-1 px-4 py-2.5 rounded-2xl bg-muted text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
