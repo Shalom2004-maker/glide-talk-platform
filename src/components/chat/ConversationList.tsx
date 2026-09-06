@@ -47,7 +47,7 @@ export function ConversationList({ conversations, activeId, currentUserId, onSel
   const filtered = conversations.filter((c) => {
     const other = getOtherParticipant(c, currentUserId);
     if (!other) return true;
-    return (other.profile.display_name || "").toLowerCase().includes(search.toLowerCase());
+    return (other.profile?.display_name || "").toLowerCase().includes(search.toLowerCase());
   });
 
   return (
@@ -80,7 +80,7 @@ export function ConversationList({ conversations, activeId, currentUserId, onSel
               }`}
             >
               <div className="relative flex-shrink-0">
-                {other?.profile.avatar_url ? (
+                {other?.profile?.avatar_url ? (
                   <img
                     src={other.profile.avatar_url}
                     alt=""
@@ -91,10 +91,10 @@ export function ConversationList({ conversations, activeId, currentUserId, onSel
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ${
                     isActive ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                   }`}>
-                    {getInitials(other?.profile.display_name || null)}
+                    {getInitials(other?.profile?.display_name || null)}
                   </div>
                 )}
-                {other?.profile.is_online && (
+                {other?.profile?.is_online && (
                   <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-online border-2 border-card" />
                 )}
               </div>
@@ -102,7 +102,7 @@ export function ConversationList({ conversations, activeId, currentUserId, onSel
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                   <span className={`text-sm font-medium truncate ${isActive ? "text-foreground" : "text-foreground"}`}>
-                    {other?.profile.display_name || "Unknown"}
+                    {other?.profile?.display_name || "Unknown"}
                   </span>
                   <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
                     {formatTime(conv.last_message?.created_at)}

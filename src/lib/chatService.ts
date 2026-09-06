@@ -58,28 +58,38 @@ export async function getUserConversations(userId: string): Promise<Conversation
 
   if (convError) throw convError;
 
-  const { data: lastMessages } = await supabase
-    .from("messages")
-    .select("*")
-    .in("conversation_id", convIds)
-    .order("created_at", { ascending: false });
+  let lastMsgByConv = new Map<string, MessageRow>();
+  try {
+    const { data: lastMessages } = await supabase
+      .from("messages")
+      .select("*")
+      .in("conversation_id", convIds)
+      .order("created_at", { ascending: false })
+      .limit(100);
 
-  const lastMsgByConv = new Map<string, MessageRow>();
-  for (const msg of lastMessages || []) {
-    if (!lastMsgByConv.has(msg.conversation_id)) {
-      lastMsgByConv.set(msg.conversation_id, msg);
+    for (const msg of lastMessages || []) {
+      if (!lastMsgByConv.has(msg.conversation_id)) {
+        lastMsgByConv.set(msg.conversation_id, msg);
+      }
     }
+  } catch {
+    lastMsgByConv = new Map();
   }
 
-  const unreadCounts = new Map<string, number>();
-  for (const convId of convIds) {
-    const { count } = await supabase
+  let unreadCounts = new Map<string, number>();
+  try {
+    const { data: unreadRows } = await supabase
       .from("messages")
-      .select("*", { count: "exact", head: true })
-      .eq("conversation_id", convId)
+      .select("conversation_id")
+      .in("conversation_id", convIds)
       .neq("sender_id", userId)
       .is("read_at", null);
-    unreadCounts.set(convId, count || 0);
+
+    for (const row of unreadRows || []) {
+      unreadCounts.set(row.conversation_id, (unreadCounts.get(row.conversation_id) || 0) + 1);
+    }
+  } catch {
+    unreadCounts = new Map();
   }
 
   const results: ConversationWithDetails[] = (conversations || []).map((conv: JoinedConversation) => ({
@@ -122,6 +132,10 @@ export async function getConversationMessages(
       status_message: null,
       is_online: false,
       last_seen: null,
+      is_admin: false,
+      is_banned: false,
+      is_verified: false,
+      deleted_at: null,
       created_at: "",
       updated_at: "",
     },
@@ -243,6 +257,8 @@ export async function searchProfiles(query: string): Promise<ProfileRow[]> {
     .from("profiles")
     .select("*")
     .ilike("display_name", `%${trimmed}%`)
+    .eq("is_banned", false)
+    .is("deleted_at", null)
     .limit(20);
 
   if (error) throw error;
@@ -427,6 +443,10 @@ export async function getRecentMessages(limit = 50): Promise<MessageWithReaction
       status_message: null,
       is_online: false,
       last_seen: null,
+      is_admin: false,
+      is_banned: false,
+      is_verified: false,
+      deleted_at: null,
       created_at: "",
       updated_at: "",
     },

@@ -18,11 +18,13 @@ const Index = () => {
 
   usePresence();
 
-  const { data: conversations = [], isLoading } = useConversations();
+  const { data: conversations = [], isLoading, error: convError } = useConversations();
   useRealtimeConversations();
   useRealtimeMessages(activeConvId);
 
-  const activeConv = conversations.find((c) => c.id === activeConvId) || conversations[0];
+  const activeConv = activeConvId
+    ? conversations.find((c) => c.id === activeConvId) || null
+    : conversations[0];
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background">
@@ -60,6 +62,20 @@ const Index = () => {
         {/* Main chat */}
         <main className="flex-1 min-w-0 bg-background">
           {isLoading ? (
+            <div className="h-full flex items-center justify-center">
+              <div className="w-8 h-8 border-3 border-primary/30 border-t-primary rounded-full animate-spin" />
+            </div>
+          ) : convError ? (
+            <div className="h-full flex flex-col items-center justify-center text-center p-6">
+              <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+                <MessageSquarePlus className="w-8 h-8 text-destructive" />
+              </div>
+              <h2 className="text-lg font-semibold text-foreground">Failed to load conversations</h2>
+              <p className="text-sm text-muted-foreground mt-1 max-w-sm">
+                {(convError as Error).message || "Something went wrong. Please refresh the page."}
+              </p>
+            </div>
+          ) : activeConvId && !activeConv ? (
             <div className="h-full flex items-center justify-center">
               <div className="w-8 h-8 border-3 border-primary/30 border-t-primary rounded-full animate-spin" />
             </div>
