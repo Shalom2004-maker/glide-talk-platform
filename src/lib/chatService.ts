@@ -7,17 +7,8 @@ type MessageRow = Database["public"]["Tables"]["messages"]["Row"];
 type ReactionRow = Database["public"]["Tables"]["message_reactions"]["Row"];
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 
-interface JoinedParticipant extends ParticipantRow {
-  profiles: ProfileRow | null;
-}
-
-interface JoinedConversation extends ConversationRow {
-  conversation_participants: JoinedParticipant[];
-}
-
-interface JoinedMessage extends Omit<MessageRow, "sender"> {
+interface JoinedMessage extends MessageRow {
   message_reactions: ReactionRow[];
-  sender: ProfileRow | null;
 }
 
 export type { ProfileRow };
@@ -36,7 +27,7 @@ export interface MessageWithReactions extends MessageRow {
 export async function getUserConversations(userId: string): Promise<ConversationWithDetails[]> {
   const { data: participations, error: partError } = await supabase
     .from("conversation_participants")
-    .select("conversation_id")
+    .select("conversation_id, user_id")
     .eq("user_id", userId);
 
   if (partError) throw partError;
@@ -46,17 +37,34 @@ export async function getUserConversations(userId: string): Promise<Conversation
 
   const { data: conversations, error: convError } = await supabase
     .from("conversations")
-    .select(`
-      *,
-      conversation_participants (
-        *,
-        profiles:user_id (*)
-      )
-    `)
+    .select("*")
     .in("id", convIds)
     .order("updated_at", { ascending: false });
 
   if (convError) throw convError;
+
+  const { data: allParticipants, error: partsError } = await supabase
+    .from("conversation_participants")
+    .select("id, conversation_id, user_id, joined_at")
+    .in("conversation_id", convIds || []);
+
+  if (partsError) throw partsError;
+
+  const memberUserIds = Array.from(
+    new Set((allParticipants || []).map((p) => p.user_id))
+  );
+
+  const { data: profiles, error: profileError } = await supabase
+    .from("profiles")
+    .select("*")
+    .in("user_id", memberUserIds);
+
+  if (profileError) throw profileError;
+
+  const profileByUserId = new Map<string, ProfileRow>();
+  for (const prof of profiles || []) {
+    profileByUserId.set(prof.user_id, prof);
+  }
 
   let lastMsgByConv = new Map<string, MessageRow>();
   try {
@@ -92,12 +100,14 @@ export async function getUserConversations(userId: string): Promise<Conversation
     unreadCounts = new Map();
   }
 
-  const results: ConversationWithDetails[] = (conversations || []).map((conv: JoinedConversation) => ({
+  const results: ConversationWithDetails[] = (conversations || []).map((conv) => ({
     ...conv,
-    participants: (conv.conversation_participants || []).map((p) => ({
-      ...p,
-      profile: p.profiles,
-    })),
+    participants: (allParticipants || [])
+      .filter((p) => p.conversation_id === conv.id)
+      .map((p) => ({
+        ...p,
+        profile: profileByUserId.get(p.user_id) as ProfileRow,
+      })),
     last_message: lastMsgByConv.get(conv.id) || null,
     unread_count: unreadCounts.get(conv.id) || 0,
   }));
@@ -112,18 +122,33 @@ export async function getConversationMessages(
     .from("messages")
     .select(`
       *,
-      message_reactions (*),
-      sender:sender_id (*)
+      message_reactions (*)
     `)
     .eq("conversation_id", conversationId)
     .order("created_at", { ascending: true });
 
   if (error) throw error;
 
-  return (messages || []).map((msg: JoinedMessage) => ({
+  const rows = messages || [];
+  const senderIds = Array.from(new Set(rows.map((m) => m.sender_id)));
+
+  let profileByUserId = new Map<string, ProfileRow>();
+  if (senderIds.length) {
+    const { data: profiles, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .in("user_id", senderIds);
+    if (!profileError) {
+      for (const prof of profiles || []) {
+        profileByUserId.set(prof.user_id, prof);
+      }
+    }
+  }
+
+  return rows.map((msg: JoinedMessage) => ({
     ...msg,
     reactions: msg.message_reactions || [],
-    sender_profile: msg.sender || {
+    sender_profile: profileByUserId.get(msg.sender_id) || {
       id: "",
       user_id: msg.sender_id,
       display_name: "Unknown",
@@ -422,19 +447,32 @@ export async function deleteMessage(messageId: string): Promise<void> {
 export async function getRecentMessages(limit = 50): Promise<MessageWithReactions[]> {
   const { data, error } = await supabase
     .from("messages")
-    .select(`
-      *,
-      sender:sender_id (*)
-    `)
+    .select("*")
     .order("created_at", { ascending: false })
     .limit(limit);
 
   if (error) throw error;
 
-  return (data || []).map((msg: JoinedMessage) => ({
+  const rows = data || [];
+  const senderIds = Array.from(new Set(rows.map((m) => m.sender_id)));
+
+  let profileByUserId = new Map<string, ProfileRow>();
+  if (senderIds.length) {
+    const { data: profiles, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .in("user_id", senderIds);
+    if (!profileError) {
+      for (const prof of profiles || []) {
+        profileByUserId.set(prof.user_id, prof);
+      }
+    }
+  }
+
+  return rows.map((msg: JoinedMessage) => ({
     ...msg,
     reactions: [],
-    sender_profile: msg.sender || {
+    sender_profile: profileByUserId.get(msg.sender_id) || {
       id: "",
       user_id: msg.sender_id,
       display_name: "Unknown",
