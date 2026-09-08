@@ -31,34 +31,34 @@ export function NavBar({ onMenuToggle, onNewConversation }: NavBarProps) {
     : user?.email?.[0]?.toUpperCase() || "?";
 
   return (
-    <header className="h-14 flex items-center justify-between px-4 glass-panel border-b border-border/50 z-20 relative">
-      <div className="flex items-center gap-3">
+    <header className="h-14 flex items-center justify-between px-3 sm:px-4 glass-panel border-b border-border/50 z-20 relative">
+      <div className="flex items-center gap-1.5 sm:gap-3">
         <button
           onClick={onMenuToggle}
-          className="lg:hidden p-2 rounded-lg hover:bg-muted transition-colors"
+          className="lg:hidden p-2 -ml-2 rounded-lg hover:bg-muted transition-colors"
           aria-label="Toggle menu"
         >
           <Menu className="w-5 h-5 text-foreground" />
         </button>
-        <h1 className="text-xl font-bold tracking-tight">
+        <h1 className="text-lg sm:text-xl font-bold tracking-tight">
           <span className="text-primary">Let</span>
           <span className="text-foreground">Chat</span>
           <span className="text-primary">.</span>
         </h1>
       </div>
 
-      <div className="flex items-center gap-1">
-        <button onClick={onNewConversation} className="p-2.5 rounded-xl hover:bg-muted transition-colors" aria-label="Search">
+      <div className="flex items-center gap-0.5 sm:gap-1">
+        <button onClick={onNewConversation} className="p-2 sm:p-2.5 rounded-xl hover:bg-muted transition-colors" aria-label="Search">
           <Search className="w-4.5 h-4.5 text-muted-foreground" />
         </button>
-        <button onClick={toggle} className="p-2.5 rounded-xl hover:bg-muted transition-colors" aria-label="Toggle theme">
+        <button onClick={toggle} className="p-2 sm:p-2.5 rounded-xl hover:bg-muted transition-colors" aria-label="Toggle theme">
           {theme === "light" ? <Moon className="w-4.5 h-4.5 text-muted-foreground" /> : <Sun className="w-4.5 h-4.5 text-muted-foreground" />}
         </button>
 
-        <div className="relative ml-1" ref={menuRef}>
+        <div className="relative ml-0.5 sm:ml-1" ref={menuRef}>
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity"
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity"
           >
             {initials}
           </button>

@@ -46,7 +46,7 @@ const Index = () => {
         <aside
           className={`${
             showSidebar ? "translate-x-0" : "-translate-x-full"
-          } lg:translate-x-0 fixed lg:static inset-y-14 left-0 z-40 w-80 border-r border-border/50 bg-card transition-transform duration-300 lg:w-80 xl:w-[340px] flex-shrink-0`}
+          } lg:translate-x-0 fixed lg:static top-14 bottom-0 left-0 z-40 w-80 border-r border-border/50 bg-card transition-transform duration-300 lg:w-80 xl:w-[340px] flex-shrink-0`}
         >
           <ConversationList
             conversations={conversations}
@@ -100,18 +100,26 @@ const Index = () => {
 
         {/* Right sidebar - profile */}
         {showProfile && activeConv && (
-          <aside className="hidden md:block w-72 xl:w-80 border-l border-border/50 flex-shrink-0 bg-card">
-            <ContactProfile
-              conversation={activeConv}
-              currentUserId={user?.id || ""}
-              onClose={() => setShowProfile(false)}
+          <>
+            {/* Mobile overlay backdrop */}
+            <div
+              className="md:hidden fixed inset-0 bg-foreground/20 z-30 animate-fade-in"
+              onClick={() => setShowProfile(false)}
             />
-          </aside>
+            {/* Mobile slide-in panel + desktop static panel */}
+            <aside className="fixed md:static top-14 bottom-0 right-0 z-40 md:z-auto w-72 xl:w-80 border-l border-border/50 flex-shrink-0 bg-card shadow-xl md:shadow-none animate-slide-in-right md:animate-none">
+              <ContactProfile
+                conversation={activeConv}
+                currentUserId={user?.id || ""}
+                onClose={() => setShowProfile(false)}
+              />
+            </aside>
+          </>
         )}
 
         {/* Mobile FAB */}
         <button
-          className="lg:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:opacity-90 transition-all z-20"
+          className="lg:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:opacity-90 transition-all z-20 pb-safe"
           aria-label="New message"
           onClick={() => setShowNewConversation(true)}
         >

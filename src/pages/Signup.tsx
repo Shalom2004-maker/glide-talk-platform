@@ -41,10 +41,10 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+    <div className="min-h-screen flex items-center justify-center bg-background px-3 sm:px-4 py-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
             <span className="text-primary">Let</span>
             <span className="text-foreground">Chat</span>
             <span className="text-primary">.</span>
@@ -52,7 +52,7 @@ const Signup = () => {
           <p className="text-muted-foreground mt-2">Create your account to get started.</p>
         </div>
 
-        <div className="glass-panel rounded-2xl p-6 space-y-6">
+        <div className="glass-panel rounded-2xl p-4 sm:p-6 space-y-6">
           <form onSubmit={handleSignup} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Display Name</label>

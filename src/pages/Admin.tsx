@@ -65,13 +65,13 @@ function StatCard({
 }) {
   return (
     <Card>
-      <CardContent className="flex items-center gap-4 p-5">
-        <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+      <CardContent className="flex items-center gap-2.5 sm:gap-4 p-3 sm:p-4 md:p-5">
+        <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
           {icon}
         </div>
-        <div>
-          <p className="text-sm text-muted-foreground">{title}</p>
-          <p className="text-2xl font-bold text-foreground">{value.toLocaleString()}</p>
+        <div className="min-w-0">
+          <p className="text-xs sm:text-sm text-muted-foreground truncate">{title}</p>
+          <p className="text-lg sm:text-2xl font-bold text-foreground">{value.toLocaleString()}</p>
         </div>
       </CardContent>
     </Card>
@@ -157,23 +157,23 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="h-14 flex items-center justify-between px-4 glass-panel border-b border-border/50">
-        <div className="flex items-center gap-3">
+      <header className="h-14 flex items-center justify-between px-3 sm:px-4 glass-panel border-b border-border/50">
+        <div className="flex items-center gap-2 sm:gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate("/")} aria-label="Back">
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="text-xl font-bold tracking-tight">
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight">
             <span className="text-primary">Admin</span> Dashboard
           </h1>
         </div>
-        <Badge variant="outline" className="gap-1">
+        <Badge variant="outline" className="gap-1 hidden sm:flex">
           <Shield className="w-3 h-3" /> Admin
         </Badge>
       </header>
 
-      <main className="max-w-6xl mx-auto p-6 space-y-6">
+      <main className="max-w-6xl mx-auto p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
           <StatCard title="Total Users" value={stats?.totalUsers || 0} icon={<Users className="w-5 h-5 text-primary" />} />
           <StatCard title="Online Now" value={stats?.onlineUsers || 0} icon={<Activity className="w-5 h-5 text-green-500" />} />
           <StatCard title="Banned" value={stats?.bannedUsers || 0} icon={<Ban className="w-5 h-5 text-destructive" />} />
@@ -183,14 +183,14 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs defaultValue="users">
-          <TabsList>
+          <TabsList className="w-full sm:w-auto justify-start overflow-x-auto">
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="messages">Recent Messages</TabsTrigger>
           </TabsList>
 
           {/* Users */}
           <TabsContent value="users" className="space-y-4">
-            <div className="relative max-w-sm">
+            <div className="relative w-full sm:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 value={search}
@@ -202,15 +202,16 @@ export default function AdminDashboard() {
 
             <Card>
               <CardContent className="p-0">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[200px]">User</TableHead>
-                      <TableHead>Admin</TableHead>
-                      <TableHead>Verified</TableHead>
-                      <TableHead>Banned</TableHead>
-                      <TableHead>Online</TableHead>
-                      <TableHead>Joined</TableHead>
+                      <TableHead className="w-[150px] sm:w-[200px]">User</TableHead>
+                      <TableHead className="hidden sm:table-cell">Admin</TableHead>
+                      <TableHead className="hidden sm:table-cell">Verified</TableHead>
+                      <TableHead className="hidden md:table-cell">Banned</TableHead>
+                      <TableHead className="hidden md:table-cell">Online</TableHead>
+                      <TableHead className="hidden lg:table-cell">Joined</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -233,45 +234,45 @@ export default function AdminDashboard() {
                         return (
                           <TableRow key={u.id}>
                             <TableCell>
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-2 sm:gap-3">
                                 <Avatar name={u.display_name} />
                                 <div className="min-w-0">
                                   <p className="text-sm font-medium text-foreground flex items-center gap-1">
                                     {u.display_name || "Unknown"}
                                     {u.is_verified && <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" />}
-                                    {isSelf && <Badge variant="secondary" className="text-[10px]">You</Badge>}
+                                    {isSelf && <Badge variant="secondary" className="text-[10px] hidden sm:inline-flex">You</Badge>}
                                   </p>
-                                  <p className="text-xs text-muted-foreground truncate">{u.user_id}</p>
+                                  <p className="text-xs text-muted-foreground truncate hidden sm:block">{u.user_id}</p>
                                 </div>
                               </div>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="hidden sm:table-cell">
                               <Switch
                                 checked={u.is_admin}
                                 disabled={isSelf || setAdmin.isPending}
                                 onCheckedChange={(v) => setAdmin.mutate({ userId: u.user_id, isAdmin: v })}
                               />
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="hidden sm:table-cell">
                               <Switch
                                 checked={u.is_verified}
                                 disabled={setVerified.isPending}
                                 onCheckedChange={(v) => setVerified.mutate({ userId: u.user_id, isVerified: v })}
                               />
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="hidden md:table-cell">
                               <Switch
                                 checked={u.is_banned}
                                 disabled={isSelf || setBanned.isPending}
                                 onCheckedChange={(v) => setBanned.mutate({ userId: u.user_id, isBanned: v })}
                               />
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="hidden md:table-cell">
                               <Badge variant={u.is_online ? "default" : "secondary"}>
                                 {u.is_online ? "Online" : "Offline"}
                               </Badge>
                             </TableCell>
-                            <TableCell className="text-xs text-muted-foreground">
+                            <TableCell className="text-xs text-muted-foreground hidden lg:table-cell">
                               {formatDate(u.created_at)}
                             </TableCell>
                             <TableCell className="text-right">
@@ -292,6 +293,7 @@ export default function AdminDashboard() {
                     )}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -300,12 +302,13 @@ export default function AdminDashboard() {
           <TabsContent value="messages">
             <Card>
               <CardContent className="p-0">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Sender</TableHead>
                       <TableHead>Message</TableHead>
-                      <TableHead>Sent</TableHead>
+                      <TableHead className="hidden sm:table-cell">Sent</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -327,13 +330,13 @@ export default function AdminDashboard() {
                               </span>
                             </div>
                           </TableCell>
-                          <TableCell className="max-w-md">
+                          <TableCell className="max-w-[150px] sm:max-w-md">
                             <p className="text-sm text-foreground truncate">{m.content}</p>
                             {m.attachment_name && (
-                              <p className="text-xs text-muted-foreground">📎 {m.attachment_name}</p>
+                              <p className="text-xs text-muted-foreground truncate">{m.attachment_name}</p>
                             )}
                           </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
+                          <TableCell className="text-xs text-muted-foreground hidden sm:table-cell">
                             {formatDate(m.created_at)}
                           </TableCell>
                           <TableCell className="text-right">
@@ -352,6 +355,7 @@ export default function AdminDashboard() {
                     )}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

@@ -139,28 +139,28 @@ export function ChatArea({ conversation, currentUserId, onToggleProfile }: ChatA
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="h-14 flex items-center justify-between px-4 border-b border-border/50 glass-panel flex-shrink-0">
-        <button onClick={onToggleProfile} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-          <div className="relative">
+      <div className="h-14 flex items-center justify-between px-2 sm:px-4 border-b border-border/50 glass-panel flex-shrink-0">
+        <button onClick={onToggleProfile} className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 hover:opacity-80 transition-opacity text-left">
+          <div className="relative flex-shrink-0">
             <Avatar src={otherProfile?.avatar_url || null} name={otherProfile?.display_name || null} />
             {otherProfile?.is_online && (
               <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-online border-2 border-card" />
             )}
           </div>
-          <div className="text-left">
-            <p className="text-sm font-semibold text-foreground">{otherProfile?.display_name || "Unknown"}</p>
-            <p className="text-xs text-muted-foreground">
+          <div className="text-left min-w-0">
+            <p className="text-sm font-semibold text-foreground truncate">{otherProfile?.display_name || "Unknown"}</p>
+            <p className="text-xs text-muted-foreground truncate">
               {otherProfile?.is_online
                 ? "Online"
                 : otherProfile?.status_message || formatLastSeen(otherProfile?.last_seen || null)}
             </p>
           </div>
         </button>
-        <div className="flex items-center gap-1">
-          <button className="p-2 rounded-xl hover:bg-muted transition-colors" aria-label="Call">
+        <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
+          <button className="p-2 rounded-xl hover:bg-muted transition-colors hidden sm:flex" aria-label="Call">
             <Phone className="w-4 h-4 text-muted-foreground" />
           </button>
-          <button className="p-2 rounded-xl hover:bg-muted transition-colors" aria-label="Video">
+          <button className="p-2 rounded-xl hover:bg-muted transition-colors hidden sm:flex" aria-label="Video">
             <Video className="w-4 h-4 text-muted-foreground" />
           </button>
           <button onClick={onToggleProfile} className="p-2 rounded-xl hover:bg-muted transition-colors" aria-label="More">
@@ -170,7 +170,7 @@ export function ChatArea({ conversation, currentUserId, onToggleProfile }: ChatA
       </div>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-1">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-thin p-3 sm:p-4 space-y-1">
         {messages.map((msg, i) => {
           const isMe = msg.sender_id === currentUserId;
           const prev = messages[i - 1];
@@ -193,7 +193,7 @@ export function ChatArea({ conversation, currentUserId, onToggleProfile }: ChatA
 
       {/* Emoji picker */}
       {showEmoji && (
-        <div className="px-4 pb-2 animate-fade-in">
+        <div className="px-2 sm:px-4 pb-2 animate-fade-in">
           <div className="glass-panel rounded-2xl p-3 flex flex-wrap gap-2">
             {emojis.map((e) => (
               <button
@@ -214,7 +214,7 @@ export function ChatArea({ conversation, currentUserId, onToggleProfile }: ChatA
           <TypingIndicator name={otherTyping.display_name} />
         </div>
       )}
-      <div className="p-3 border-t border-border/50 flex-shrink-0">
+      <div className="p-2 sm:p-3 border-t border-border/50 flex-shrink-0 pb-safe">
         <input
           ref={fileInputRef}
           type="file"
@@ -230,15 +230,15 @@ export function ChatArea({ conversation, currentUserId, onToggleProfile }: ChatA
             </button>
           </div>
         )}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <button
             onClick={() => setShowEmoji(!showEmoji)}
-            className={`p-2.5 rounded-xl transition-colors ${showEmoji ? "bg-primary/10 text-primary" : "hover:bg-muted text-muted-foreground"}`}
+            className={`p-2 sm:p-2.5 rounded-xl transition-colors ${showEmoji ? "bg-primary/10 text-primary" : "hover:bg-muted text-muted-foreground"}`}
             aria-label="Emoji"
           >
             <Smile className="w-5 h-5" />
           </button>
-          <button onClick={() => fileInputRef.current?.click()} className="p-2.5 rounded-xl hover:bg-muted transition-colors text-muted-foreground" aria-label="Attach">
+          <button onClick={() => fileInputRef.current?.click()} className="p-2 sm:p-2.5 rounded-xl hover:bg-muted transition-colors text-muted-foreground" aria-label="Attach">
             <Paperclip className="w-5 h-5" />
           </button>
           <input
@@ -246,12 +246,12 @@ export function ChatArea({ conversation, currentUserId, onToggleProfile }: ChatA
             onChange={handleInputChange}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend(input)}
             placeholder="Type a message..."
-            className="flex-1 px-4 py-2.5 rounded-2xl bg-muted text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+            className="flex-1 min-w-0 px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl bg-muted text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
           />
           <button
             onClick={() => handleSend(input)}
             disabled={(!input.trim() && !pickedFile) || sendMessage.isPending || uploadAttachment.isPending}
-            className="p-2.5 rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            className="p-2 sm:p-2.5 rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
             aria-label="Send"
           >
             {uploadAttachment.isPending ? (

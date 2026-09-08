@@ -82,14 +82,14 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="h-14 flex items-center gap-3 px-4 glass-panel border-b border-border/50">
-        <button onClick={() => navigate("/")} className="p-2 rounded-lg hover:bg-muted transition-colors">
+      <header className="h-14 flex items-center gap-3 px-3 sm:px-4 glass-panel border-b border-border/50">
+        <button onClick={() => navigate("/")} className="p-2 -ml-2 rounded-lg hover:bg-muted transition-colors">
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
-        <h1 className="text-lg font-semibold text-foreground">Profile</h1>
+        <h1 className="text-base sm:text-lg font-semibold text-foreground">Profile</h1>
       </header>
 
-      <div className="max-w-md mx-auto px-4 py-8 space-y-6">
+      <div className="max-w-md mx-auto px-3 sm:px-4 py-6 sm:py-8 space-y-6">
         {/* Avatar */}
         <div className="flex flex-col items-center gap-3">
           <input
@@ -130,7 +130,7 @@ const Profile = () => {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSave} className="glass-panel rounded-2xl p-6 space-y-4">
+        <form onSubmit={handleSave} className="glass-panel rounded-2xl p-4 sm:p-6 space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Display Name</label>
             <input
