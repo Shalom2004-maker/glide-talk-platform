@@ -128,7 +128,7 @@ export default function AdminDashboard() {
         <p className="text-sm text-muted-foreground mt-1 max-w-sm">
           You do not have administrator privileges to view this page.
         </p>
-        <Button className="mt-6" onClick={() => navigate("/")}>
+        <Button className="mt-6" onClick={() => navigate("/chat")}>
           Back to Chat
         </Button>
       </div>
@@ -159,7 +159,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-background">
       <header className="h-14 flex items-center justify-between px-3 sm:px-4 glass-panel border-b border-border/50">
         <div className="flex items-center gap-2 sm:gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")} aria-label="Back">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/chat")} aria-label="Back">
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <h1 className="text-lg sm:text-xl font-bold tracking-tight">

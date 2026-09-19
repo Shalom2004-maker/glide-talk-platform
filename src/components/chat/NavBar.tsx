@@ -80,7 +80,7 @@ export function NavBar({ onMenuToggle, onNewConversation }: NavBarProps) {
                 </button>
               )}
               <button
-                onClick={async () => { setShowMenu(false); await signOut(); navigate("/login"); }}
+                onClick={async () => { setShowMenu(false); await signOut(); navigate("/"); }}
                 className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-destructive hover:bg-muted transition-colors"
               >
                 <LogOut className="w-4 h-4" /> Sign Out

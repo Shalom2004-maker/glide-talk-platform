@@ -73,7 +73,7 @@ const Profile = () => {
 
   const handleLogout = async () => {
     await signOut();
-    navigate("/login");
+    navigate("/");
   };
 
   const initials = displayName
@@ -83,7 +83,7 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="h-14 flex items-center gap-3 px-3 sm:px-4 glass-panel border-b border-border/50">
-        <button onClick={() => navigate("/")} className="p-2 -ml-2 rounded-lg hover:bg-muted transition-colors">
+        <button onClick={() => navigate("/chat")} className="p-2 -ml-2 rounded-lg hover:bg-muted transition-colors">
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <h1 className="text-base sm:text-lg font-semibold text-foreground">Profile</h1>

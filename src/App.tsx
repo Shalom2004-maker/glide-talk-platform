@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import Landing from "./pages/Landing.tsx";
 import Index from "./pages/Index.tsx";
 import Login from "./pages/Login.tsx";
 import Signup from "./pages/Signup.tsx";
@@ -36,7 +37,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-  return user ? <Navigate to="/" replace /> : <>{children}</>;
+  return user ? <Navigate to="/chat" replace /> : <>{children}</>;
 }
 
 const App = () => (
@@ -49,9 +50,10 @@ const App = () => (
           <BrowserRouter>
             <ErrorBoundary>
               <Routes>
+                <Route path="/" element={<Landing />} />
+                <Route path="/chat" element={<ProtectedRoute><Index /></ProtectedRoute>} />
                 <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
                 <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
-                <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                 <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
